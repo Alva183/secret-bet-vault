@@ -1,12 +1,16 @@
 # 🔐 FHEVM Voting Game - Fully Homomorphic Encryption Counter
 
-[![Demo Video](https://img.shields.io/badge/Demo-Video-blue)](https://github.com/Alva183/secret-bet-vault/blob/master/voting-game.mp4)
+[![Demo Video](https://img.shields.io/badge/Demo-Video-blue)](https://github.com/Alva183/secret-bet-vault/blob/main/voting-game.mp4)
 
 A secure voting game implementation using **FHEVM (Fully Homomorphic Encryption Virtual Machine)** technology, enabling privacy-preserving vote counting and encrypted data operations on Ethereum-compatible blockchains.
 
+## 🌐 Testnet Access
+
+Interact with the live Sepolia testnet dApp: [https://voting-game-y87w.vercel.app/](https://voting-game-y87w.vercel.app/)
+
 ## 🎥 Demo Video
 
-Watch the complete demo: [voting-game.mp4](https://github.com/Alva183/secret-bet-vault/blob/master/voting-game.mp4)
+Watch the complete demo: [voting-game.mp4](https://github.com/Alva183/secret-bet-vault/blob/main/voting-game.mp4)
 
 The video demonstrates:
 - Smart contract deployment on Sepolia testnet
