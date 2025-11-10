@@ -26,7 +26,10 @@ export function VotingGameApp() {
     decryptRound
   } = useVotingGame(refreshTrigger);
 
-  // BUG: Missing error handling for the hook
+  // Handle potential errors from the hook
+  if (error) {
+    console.error('VotingGame hook error:', error);
+  }
 
   // Auto-refresh every 30 seconds to avoid rate limits
   useEffect(() => {
