@@ -88,12 +88,12 @@ contract VotingGame is SepoliaConfig {
             round.totalRedAmount += msg.value;
             euint32 one = FHE.asEuint32(1);
             round.encryptedRedCount = FHE.add(round.encryptedRedCount, one);
-            // BUG: Missing FHE.allowThis call for encryptedRedCount
+            FHE.allowThis(round.encryptedRedCount);
         } else {
             round.totalBlueAmount += msg.value;
             euint32 one = FHE.asEuint32(1);
             round.encryptedBlueCount = FHE.add(round.encryptedBlueCount, one);
-            // BUG: Missing FHE.allowThis call for encryptedBlueCount
+            FHE.allowThis(round.encryptedBlueCount);
         }
         
         emit VoteCast(currentRoundId, msg.sender, msg.value);
