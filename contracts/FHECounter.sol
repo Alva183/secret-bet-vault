@@ -25,7 +25,9 @@ contract FHECounter is SepoliaConfig {
         euint32 encryptedEuint32 = FHE.fromExternal(inputEuint32, inputProof);
 
         _count = FHE.add(_count, encryptedEuint32);
-        // BUG: Missing FHE.allowThis and FHE.allow calls - users cannot access the updated count
+
+        FHE.allowThis(_count);
+        FHE.allow(_count, msg.sender);
     }
 
     /// @notice Decrements the counter by a specified encrypted value.
