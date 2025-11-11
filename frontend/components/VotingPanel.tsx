@@ -30,8 +30,8 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
       setVoting(true);
       await onVote(isRed, amount);
       alert(`Successfully voted ${isRed ? 'Red' : 'Blue'}!`);
-      // Trigger refresh to update UI immediately after vote
-      window.location.reload();
+      // Trigger UI refresh to update voting state
+      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Vote error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
