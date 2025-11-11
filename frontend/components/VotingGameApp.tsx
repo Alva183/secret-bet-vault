@@ -26,9 +26,22 @@ export function VotingGameApp() {
     decryptRound
   } = useVotingGame(refreshTrigger);
 
-  // Handle potential errors from the hook
+  // Handle errors from the voting game hook
   if (error) {
-    console.error('VotingGame hook error:', error);
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <div className="text-red-500 text-center">
+          <h3 className="text-lg font-semibold mb-2">Error Loading Voting Game</h3>
+          <p className="text-sm">{error.message || 'Unknown error occurred'}</p>
+        </div>
+        <button
+          onClick={() => setRefreshTrigger(prev => prev + 1)}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   // Auto-refresh every 30 seconds to avoid rate limits
