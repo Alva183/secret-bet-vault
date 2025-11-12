@@ -29,7 +29,11 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
     try {
       setVoting(true);
       await onVote(isRed, amount);
-      alert(`Successfully voted ${isRed ? 'Red' : 'Blue'}!`);
+
+      // Show success message with more details
+      const teamName = isRed ? 'Red' : 'Blue';
+      alert(`Successfully voted for ${teamName} team with ${amount} ETH! Your vote has been recorded.`);
+
       // Trigger UI refresh to update voting state
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
