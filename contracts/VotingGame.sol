@@ -67,6 +67,8 @@ contract VotingGame is SepoliaConfig {
     /// @notice Cast a vote with encrypted choice
     /// @param isRed true for Red vote, false for Blue vote
     function vote(bool isRed) external payable {
+        // Additional validation for security
+        require(msg.value > 0, "Must send ETH to vote");
         require(msg.value >= MIN_BET, "Minimum bet is 0.1 ETH");
         
         Round storage round = rounds[currentRoundId];
