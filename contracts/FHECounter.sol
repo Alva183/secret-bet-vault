@@ -43,4 +43,11 @@ contract FHECounter is SepoliaConfig {
         FHE.allowThis(_count);
         FHE.allow(_count, msg.sender);
     }
+
+    /// @notice Reset the counter to zero
+    function reset() external {
+        _count = FHE.asEuint32(0);
+        FHE.allowThis(_count);
+        FHE.allow(_count, msg.sender);
+    }
 }
