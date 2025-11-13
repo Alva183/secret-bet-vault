@@ -19,6 +19,7 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
   const [amount, setAmount] = useState('0.1');
   const [voting, setVoting] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [lastVoteResult, setLastVoteResult] = useState<string | null>(null);
   
   const hasVoted = round.userHasVoted;
   const canEndRound = timeRemaining === 0 && round.isActive;
@@ -30,9 +31,11 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
       setVoting(true);
       await onVote(isRed, amount);
 
-      // Show success message with more details
+      // Show success message and update status
       const teamName = isRed ? 'Red' : 'Blue';
-      alert(`Successfully voted for ${teamName} team with ${amount} ETH! Your vote has been recorded.`);
+      const successMessage = `Successfully voted for ${teamName} team with ${amount} ETH!`;
+      alert(successMessage);
+      setLastVoteResult(successMessage);
 
       // Trigger UI refresh to update voting state
       setRefreshTrigger(prev => prev + 1);
