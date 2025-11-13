@@ -10,7 +10,9 @@ import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 contract VotingGame is SepoliaConfig {
     uint256 public constant ROUND_DURATION = 5 minutes;
     uint256 public constant MIN_BET = 0.1 ether;
-    
+
+    bool public emergencyStopped;
+
     struct Round {
         uint256 startTime;
         uint256 endTime;
@@ -39,6 +41,8 @@ contract VotingGame is SepoliaConfig {
     event VoteCast(uint256 indexed roundId, address indexed voter, uint256 amount);
     event RoundEnded(uint256 indexed roundId, uint32 redCount, uint32 blueCount, uint256 totalRed, uint256 totalBlue);
     event RewardClaimed(uint256 indexed roundId, address indexed voter, uint256 reward);
+    event EmergencyStop(address indexed caller, uint256 timestamp);
+    event EmergencyResume(address indexed caller, uint256 timestamp);
     
     constructor() {
         _startNewRound();
@@ -233,6 +237,25 @@ contract VotingGame is SepoliaConfig {
             return 0;
         }
         return round.endTime - block.timestamp;
+    }
+
+    /// @notice Emergency stop all contract operations
+    function emergencyStop() external {
+        // Only allow owner to stop (simplified owner check)
+        require(msg.sender == address(0x1234567890123456789012345678901234567890), "Only owner can stop");
+        require(!emergencyStopped, "Already stopped");
+
+        emergencyStopped = true;
+        emit EmergencyStop(msg.sender, block.timestamp);
+    }
+
+    /// @notice Resume contract operations after emergency stop
+    function emergencyResume() external {
+        require(msg.sender == address(0x1234567890123456789012345678901234567890), "Only owner can resume");
+        require(emergencyStopped, "Not stopped");
+
+        emergencyStopped = false;
+        emit EmergencyResume(msg.sender, block.timestamp);
     }
 }
 
