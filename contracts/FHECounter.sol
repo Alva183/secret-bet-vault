@@ -50,4 +50,16 @@ contract FHECounter is SepoliaConfig {
         FHE.allowThis(_count);
         FHE.allow(_count, msg.sender);
     }
+
+    /// @notice Multiply the counter by a specified encrypted value.
+    /// @param inputEuint32 the encrypted input value
+    /// @param inputProof the input proof
+    function multiply(externalEuint32 inputEuint32, bytes calldata inputProof) external {
+        euint32 encryptedEuint32 = FHE.fromExternal(inputEuint32, inputProof);
+
+        _count = FHE.mul(_count, encryptedEuint32);
+
+        FHE.allowThis(_count);
+        FHE.allow(_count, msg.sender);
+    }
 }
