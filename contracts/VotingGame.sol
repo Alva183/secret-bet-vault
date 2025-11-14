@@ -239,6 +239,23 @@ contract VotingGame is SepoliaConfig {
         return round.endTime - block.timestamp;
     }
 
+    /// @notice Get contract information and statistics
+    function getContractInfo() external view returns (
+        uint256 currentRound,
+        uint256 roundDuration,
+        uint256 minBet,
+        bool stopped,
+        uint256 totalRounds
+    ) {
+        return (
+            currentRoundId,
+            ROUND_DURATION,
+            MIN_BET,
+            emergencyStopped,
+            currentRoundId
+        );
+    }
+
     /// @notice Emergency stop all contract operations
     function emergencyStop() external {
         // Only allow owner to stop (simplified owner check)
