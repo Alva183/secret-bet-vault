@@ -41,8 +41,22 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Vote error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let errorMessage = 'Unknown error occurred';
+
+      if (error instanceof Error) {
+        if (error.message.includes('User rejected')) {
+          errorMessage = 'Transaction was cancelled by user';
+        } else if (error.message.includes('insufficient funds')) {
+          errorMessage = 'Insufficient funds for transaction';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Network error - please check your connection';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       alert(`Error voting: ${errorMessage}`);
+      setLastVoteResult(`Failed: ${errorMessage}`);
     } finally {
       setVoting(false);
     }
