@@ -24,6 +24,12 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
   const hasVoted = round.userHasVoted;
   const canEndRound = timeRemaining === 0 && round.isActive;
 
+  // Validate amount input
+  const isValidAmount = () => {
+    const numAmount = parseFloat(amount);
+    return !isNaN(numAmount) && numAmount >= 0.1 && numAmount <= 10;
+  };
+
   const handleVote = async (isRed: boolean) => {
     if (!userAddress || hasVoted || voting) return;
 
@@ -116,7 +122,7 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => handleVote(true)}
-              disabled={voting || parseFloat(amount) < 0.1}
+              disabled={voting || hasVoted || !isValidAmount()}
               className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg transition-colors shadow-lg transform hover:scale-105 active:scale-95"
             >
               {voting ? (
@@ -136,7 +142,7 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
             
             <button
               onClick={() => handleVote(false)}
-              disabled={voting || parseFloat(amount) < 0.1}
+              disabled={voting || hasVoted || !isValidAmount()}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg transition-colors shadow-lg transform hover:scale-105 active:scale-95"
             >
               {voting ? (
