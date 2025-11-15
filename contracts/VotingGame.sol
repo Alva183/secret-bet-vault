@@ -43,6 +43,7 @@ contract VotingGame is SepoliaConfig {
     event RewardClaimed(uint256 indexed roundId, address indexed voter, uint256 reward);
     event EmergencyStop(address indexed caller, uint256 timestamp);
     event EmergencyResume(address indexed caller, uint256 timestamp);
+    event ContractInfoRequested(address indexed caller, uint256 timestamp);
     
     constructor() {
         _startNewRound();
@@ -240,13 +241,14 @@ contract VotingGame is SepoliaConfig {
     }
 
     /// @notice Get contract information and statistics
-    function getContractInfo() external view returns (
+    function getContractInfo() external returns (
         uint256 currentRound,
         uint256 roundDuration,
         uint256 minBet,
         bool stopped,
         uint256 totalRounds
     ) {
+        emit ContractInfoRequested(msg.sender, block.timestamp);
         return (
             currentRoundId,
             ROUND_DURATION,
