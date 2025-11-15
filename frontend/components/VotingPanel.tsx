@@ -91,8 +91,8 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 text-center">Cast Your Vote</h2>
+    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6 border-t-4 border-blue-500">
+      <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">🗳️ Cast Your Vote</h2>
       
       {hasVoted ? (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-center">
