@@ -4,9 +4,11 @@ pragma solidity ^0.8.24;
 import {FHE, euint32, externalEuint32} from "@fhevm/solidity/lib/FHE.sol";
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
-/// @title A simple FHE counter contract
+/// @title FHE Counter - Encrypted Counter Operations
 /// @author fhevm-hardhat-template
-/// @notice A very basic example contract showing how to work with encrypted data using FHEVM.
+/// @notice A secure counter contract demonstrating Fully Homomorphic Encryption (FHE) operations.
+///         Supports encrypted addition, subtraction, multiplication, and reset operations.
+/// @dev All operations maintain privacy while performing mathematical computations on encrypted data.
 contract FHECounter is SepoliaConfig {
     euint32 private _count;
 
