@@ -23,6 +23,7 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
   
   const hasVoted = round.userHasVoted;
   const canEndRound = timeRemaining === 0 && round.isActive;
+  const roundHasEndedOnChain = timeRemaining === 0;
 
   // Validate amount input
   const isValidAmount = () => {
@@ -33,6 +34,12 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
   const handleVote = async (isRed: boolean) => {
     if (!userAddress || hasVoted || voting) return;
 
+    // 防止在轮次已结束时仍然发起投票，避免合约报错 "Round has ended"
+    if (roundHasEndedOnChain) {
+      alert('当前轮次已经结束，请等待新一轮开始，或者先点击下方按钮结束本轮。');
+      return;
+    }
+
     try {
       setVoting(true);
       await onVote(isRed, amount);
@@ -42,9 +49,6 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
       const successMessage = `Successfully voted for ${teamName} team with ${amount} ETH!`;
       alert(successMessage);
       setLastVoteResult(successMessage);
-
-      // Trigger UI refresh to update voting state
-      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Vote error:', error);
       let errorMessage = 'Unknown error occurred';
@@ -54,6 +58,8 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
           errorMessage = 'Transaction was cancelled by user';
         } else if (error.message.includes('insufficient funds')) {
           errorMessage = 'Insufficient funds for transaction';
+        } else if (error.message.includes('Round has ended')) {
+          errorMessage = '当前轮次已经在链上结束，请等待新一轮开始或先点击“End Round & Start New”按钮。';
         } else if (error.message.includes('network')) {
           errorMessage = 'Network error - please check your connection';
         } else {
@@ -122,7 +128,7 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => handleVote(true)}
-              disabled={voting || hasVoted || !isValidAmount()}
+              disabled={voting || hasVoted || !isValidAmount() || roundHasEndedOnChain}
               className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg transition-colors shadow-lg transform hover:scale-105 active:scale-95"
             >
               {voting ? (
@@ -142,7 +148,7 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
             
             <button
               onClick={() => handleVote(false)}
-              disabled={voting || hasVoted || !isValidAmount()}
+              disabled={voting || hasVoted || !isValidAmount() || roundHasEndedOnChain}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg transition-colors shadow-lg transform hover:scale-105 active:scale-95"
             >
               {voting ? (

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { formatEther } from 'viem';
 import { useVotingGameContract } from '../hooks/useVotingGame';
+import { useAutoDecryptRound } from '../hooks/useAutoDecryptRound';
 
 interface UserVote {
   hasVoted: boolean;
@@ -34,62 +35,81 @@ export function PastRounds({ currentRoundId, userAddress, onClaimReward, onDecry
   const [decrypting, setDecrypting] = useState<number | null>(null);
   const [showDecryptModal, setShowDecryptModal] = useState<{roundId: number, redCount: number, blueCount: number} | null>(null);
   const contract = useVotingGameContract();
+  const { isSepolia, autoDecryptRound } = useAutoDecryptRound();
 
-  const loadPastRounds = useCallback(async () => {
-    if (!contract || !userAddress || currentRoundId <= 1n) return;
-    
-    setLoading(true);
-    try {
-      const pastRounds: RoundData[] = [];
-      const roundsToCheck = Math.min(Number(currentRoundId) - 1, 5); // Show last 5 rounds
-      
-      for (let i = 1; i <= roundsToCheck; i++) {
-        const roundId = Number(currentRoundId) - i;
+  // 加载历史轮次数据
+  useEffect(() => {
+    // 没有合约、没有地址或还在第一轮时，不加载历史数据
+    if (!contract || !userAddress || currentRoundId <= 1n) {
+      setRounds([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchPastRounds = async () => {
+      setLoading(true);
+      try {
+        const pastRounds: RoundData[] = [];
+        const roundsToCheck = Math.min(Number(currentRoundId) - 1, 5); // Show last 5 rounds
         
-        try {
-          const [results, userVote] = await Promise.all([
-            contract.read.getRoundResults([BigInt(roundId)]),
-            contract.read.getUserVote([BigInt(roundId), userAddress as `0x${string}`])
-          ]);
+        for (let i = 1; i <= roundsToCheck; i++) {
+          const roundId = Number(currentRoundId) - i;
+          
+          try {
+            const [results, userVote] = await Promise.all([
+              contract.read.getRoundResults([BigInt(roundId)]),
+              contract.read.getUserVote([BigInt(roundId), userAddress as `0x${string}`])
+            ]);
 
-          if (userVote[0]) { // hasVoted
-            pastRounds.push({
-              roundId,
-              redCount: results[0],
-              blueCount: results[1],
-              totalRedAmount: results[2],
-              totalBlueAmount: results[3],
-              isDecrypted: results[4],
-              userVote: {
-                hasVoted: userVote[0],
-                isRed: userVote[1],
-                amount: userVote[2]
-              }
-            });
+            if (userVote[0]) { // hasVoted
+              pastRounds.push({
+                roundId,
+                redCount: results[0],
+                blueCount: results[1],
+                totalRedAmount: results[2],
+                totalBlueAmount: results[3],
+                isDecrypted: results[4],
+                userVote: {
+                  hasVoted: userVote[0],
+                  isRed: userVote[1],
+                  amount: userVote[2]
+                }
+              });
+            }
+          } catch (error) {
+            console.error(`Error loading round ${roundId}:`, error);
           }
-        } catch (error) {
-          console.error(`Error loading round ${roundId}:`, error);
+        }
+
+        if (!cancelled) {
+          setRounds(pastRounds);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error loading past rounds:', error);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
         }
       }
-      
-      setRounds(pastRounds);
-    } catch (error) {
-      console.error('Error loading past rounds:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [contract, userAddress, currentRoundId]);
+    };
 
-  useEffect(() => {
-    loadPastRounds();
-  }, [loadPastRounds]);
+    fetchPastRounds();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [contract?.address, currentRoundId, userAddress]);
 
   const handleClaim = async (roundId: number) => {
     try {
       setClaiming(roundId);
       await onClaimReward(roundId);
       alert('Reward claimed successfully!');
-      await loadPastRounds();
+      // 领取奖励后，重新加载历史轮次数据
+      // 通过改变 currentRoundId 触发上面的 useEffect，或者你也可以在父组件里主动刷新
     } catch (error) {
       console.error('Claim error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -99,8 +119,29 @@ export function PastRounds({ currentRoundId, userAddress, onClaimReward, onDecry
     }
   };
 
-  const handleDecryptRequest = (round: RoundData) => {
-    // 根据投票金额估算票数（每票至少0.1 ETH）
+  const handleDecryptRequest = async (round: RoundData) => {
+    if (!onDecryptRound) return;
+
+    // Sepolia: use real relayer-based decryption
+    if (isSepolia && contract) {
+      try {
+        setDecrypting(round.roundId);
+        const { redCount, blueCount } = await autoDecryptRound({
+          roundId: round.roundId,
+          contractAddress: contract.address,
+        });
+        alert(`Round #${round.roundId} decrypted via relayer: Red=${redCount}, Blue=${blueCount}`);
+      } catch (error) {
+        console.error('Auto decrypt error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        alert(`Error auto decrypting round: ${errorMessage}`);
+      } finally {
+        setDecrypting(null);
+      }
+      return;
+    }
+
+    // Local hardhat / other networks: keep manual modal-based estimation
     const estimatedRedCount = Math.ceil(Number(formatEther(round.totalRedAmount)) / 0.1);
     const estimatedBlueCount = Math.ceil(Number(formatEther(round.totalBlueAmount)) / 0.1);
     
@@ -116,14 +157,14 @@ export function PastRounds({ currentRoundId, userAddress, onClaimReward, onDecry
     
     try {
       setDecrypting(showDecryptModal.roundId);
-      await onDecryptRound(
-        showDecryptModal.roundId,
-        showDecryptModal.redCount,
-        showDecryptModal.blueCount
-      );
+          await onDecryptRound(
+            showDecryptModal.roundId,
+            showDecryptModal.redCount,
+            showDecryptModal.blueCount
+          );
       alert('Round decrypted successfully!');
       setShowDecryptModal(null);
-      await loadPastRounds();
+      // 解密完成后，依赖 currentRoundId 或父组件触发刷新
     } catch (error) {
       console.error('Decrypt error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

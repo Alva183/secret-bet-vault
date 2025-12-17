@@ -1,8 +1,7 @@
-# FHEVM React Template
+# Voting Game Frontend
 
-The FHEVM React Template is an ultra-minimal React project for building and running an FHEVM-enabled dApp.
-It works alongside the [fhevm-hardhat-template](https://github.com/zama-ai/fhevm-hardhat-template)
-and provides a simple development frontend for interacting with the `FHECounter.sol` contract.
+The Voting Game Frontend is a React project for building and running an FHEVM-enabled voting game dApp.
+It provides a development frontend for interacting with the `VotingGame.sol` contract.
 
 This template also illustrates how to run your FHEVM-dApp on both Sepolia as well as a local Hardhat Node (much faster).
 
@@ -69,10 +68,10 @@ npx hardhat node --verbose
 # Default RPC: http://127.0.0.1:8545  | chainId: 31337
 ```
 
-3. Deploy `FHECounter` to the local node:
+3. Deploy `VotingGame` to the local node:
 
 ```sh
-# still in packages/fhevm-hardhat-template
+# from project root
 npx hardhat deploy --network localhost
 ```
 
@@ -81,7 +80,7 @@ npx hardhat deploy --network localhost
 Follows instructions in the [FHEVM documentation to setup your Hardhat project for Sepolia](https://docs.zama.ai/protocol/solidity-guides/getting-started/setup#set-up-the-hardhat-configuration-variables-optional)
 
 ```sh
-# still in packages/fhevm-hardhat-template
+# from project root
 npx hardhat deploy --network sepolia
 ```
 
@@ -90,14 +89,20 @@ npx hardhat deploy --network sepolia
 1. Start a local Hardhat node (new terminal):
 
 ```sh
-cd packages/fhevm-hardhat-template
-npx hardhat node --verbose
+# from project root
+npx hardhat node
 ```
 
-2. From the `<root>/packages/site` run
+2. Deploy the contract:
 
 ```sh
-npm run dev:mock
+npx hardhat deploy --network localhost
+```
+
+3. From the `frontend` directory run:
+
+```sh
+npm run dev
 ```
 
 3. In your browser open `http://localhost:3000`
@@ -145,12 +150,12 @@ By following these steps, you can ensure that MetaMask syncs correctly with your
 
 - **`<root>/packages/site/fhevm`**: This folder contains the essential hooks needed to interact with FHEVM-enabled smart contracts. It is meant to be easily copied and integrated into any FHEVM + React project.
 
-- **`<root>/packages/site/hooks/useFHECounter.tsx`**: A simple React custom hook that demonstrates how to use the `useFhevm` hook in a basic use case, serving as an example of integration.
+- **`frontend/hooks/useVotingGame.tsx`**: A React custom hook that provides voting game functionality, including voting, decrypting results, and claiming rewards.
 
 ### Secondary Files/Folders
 
-- **`<root>/packages/site/hooks/metamask`**: This folder includes hooks designed to manage the MetaMask Wallet provider. These hooks can be easily adapted or replaced to support other wallet providers, following the EIP-6963 standard,
-- Additionally, the project is designed to be flexible, allowing developers to easily replace `ethers.js` with a more React-friendly library of their choice, such as `Wagmi`.
+- **`frontend/components`**: Contains React components for the voting game UI, including VotingPanel, RoundStats, and PastRounds.
+- The project uses RainbowKit for wallet connection and Wagmi for Web3 interactions.
 
 ## Documentation
 

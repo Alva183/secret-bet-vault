@@ -71,51 +71,56 @@ export function useVotingGame(refreshTrigger: number = 0) {
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const contract = useVotingGameContract();
+  const contractAddress = contract?.address;
   
   const [currentRound, setCurrentRound] = useState<any>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadRoundData = useCallback(async () => {
-    if (!contract) {
-      setError('Contract not found on this network');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const [roundData, timeLeft] = await Promise.all([
-        contract.read.getCurrentRound(),
-        contract.read.getTimeRemaining(),
-      ]);
-
-      let userHasVoted = false;
-      if (address && roundData[0]) {
-        userHasVoted = await contract.read.hasVoted([roundData[0], address]);
+  const loadRoundData = useCallback(
+    async () => {
+      if (!contract) {
+        setError('Contract not found on this network');
+        setLoading(false);
+        return;
       }
 
-      setCurrentRound({
-        roundId: roundData[0],
-        startTime: roundData[1],
-        endTime: roundData[2],
-        totalRedAmount: roundData[3],
-        totalBlueAmount: roundData[4],
-        isActive: roundData[5],
-        isDecrypted: roundData[6],
-        participantCount: roundData[7],
-        userHasVoted,
-      });
+      try {
+        const [roundData, timeLeft] = await Promise.all([
+          contract.read.getCurrentRound(),
+          contract.read.getTimeRemaining(),
+        ]);
 
-      setTimeRemaining(Number(timeLeft));
-      setError(null);
-    } catch (err: any) {
-      console.error('Error loading round data:', err);
-      setError(err.message || 'Failed to load round data');
-    } finally {
-      setLoading(false);
-    }
-  }, [contract, address]);
+        let userHasVoted = false;
+        if (address && roundData[0]) {
+          userHasVoted = await contract.read.hasVoted([roundData[0], address]);
+        }
+
+        setCurrentRound({
+          roundId: roundData[0],
+          startTime: roundData[1],
+          endTime: roundData[2],
+          totalRedAmount: roundData[3],
+          totalBlueAmount: roundData[4],
+          isActive: roundData[5],
+          isDecrypted: roundData[6],
+          participantCount: roundData[7],
+          userHasVoted,
+        });
+
+        setTimeRemaining(Number(timeLeft));
+        setError(null);
+      } catch (err: any) {
+        console.error('Error loading round data:', err);
+        setError(err.message || 'Failed to load round data');
+      } finally {
+        setLoading(false);
+      }
+    },
+    // 只根据 address 和 合约地址变化重新创建，避免每次渲染都变导致死循环
+    [contractAddress, address],
+  );
 
   useEffect(() => {
     loadRoundData();

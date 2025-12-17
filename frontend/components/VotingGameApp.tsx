@@ -108,15 +108,6 @@ export function VotingGameApp() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-      {/* Debug Info */}
-      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-        <p className="text-sm font-mono">
-          <strong>Chain ID:</strong> {chainId || 'Not connected'} | 
-          <strong> Contract Address:</strong> {contractAddress || 'Not found'} |
-          <strong> Expected Chain ID:</strong> 31337 (Hardhat Local)
-        </p>
-      </div>
-
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold text-gray-900">Encrypted Voting Game</h1>

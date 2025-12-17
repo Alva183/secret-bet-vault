@@ -211,6 +211,17 @@ contract VotingGame is SepoliaConfig {
             round.isDecrypted
         );
     }
+
+    /// @notice Get encrypted vote counts for a round (for off-chain FHE decryption)
+    /// @dev This returns the FHE-encrypted counters. They can be decrypted off-chain
+    ///      using the FHEVM relayer on Sepolia, then fed back via setDecryptedResults.
+    function getEncryptedCounts(uint256 roundId) external view returns (
+        euint32 encryptedRedCount,
+        euint32 encryptedBlueCount
+    ) {
+        Round storage round = rounds[roundId];
+        return (round.encryptedRedCount, round.encryptedBlueCount);
+    }
     
     /// @notice Check if user has voted in a round
     function hasVoted(uint256 roundId, address user) external view returns (bool) {
@@ -219,7 +230,7 @@ contract VotingGame is SepoliaConfig {
     
     /// @notice Get user's vote info for a round
     function getUserVote(uint256 roundId, address user) external view returns (
-        bool hasVoted,
+        bool userHasVoted,
         bool isRed,
         uint256 amount
     ) {
