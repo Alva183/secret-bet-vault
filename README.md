@@ -88,7 +88,7 @@ const isRed = true; // Red vote
 const amount = parseEther("0.2"); // 0.2 ETH
 
 // Vote is encrypted and sent to contract
-await contract.vote(isRed, { value: amount });
+      await contract.vote(isRed, { value: amount });
 ```
 
 #### 2. Encrypted Counting (Smart Contract)

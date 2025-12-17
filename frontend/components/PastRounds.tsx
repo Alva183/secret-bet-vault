@@ -33,7 +33,6 @@ export function PastRounds({ currentRoundId, userAddress, onClaimReward, onDecry
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState<number | null>(null);
   const [decrypting, setDecrypting] = useState<number | null>(null);
-  const [showDecryptModal, setShowDecryptModal] = useState<{roundId: number, redCount: number, blueCount: number} | null>(null);
   const contract = useVotingGameContract();
   const { isSepolia, autoDecryptRound } = useAutoDecryptRound();
 
@@ -141,30 +140,18 @@ export function PastRounds({ currentRoundId, userAddress, onClaimReward, onDecry
       return;
     }
 
-    // Local hardhat / other networks: keep manual modal-based estimation
-    const estimatedRedCount = Math.ceil(Number(formatEther(round.totalRedAmount)) / 0.1);
-    const estimatedBlueCount = Math.ceil(Number(formatEther(round.totalBlueAmount)) / 0.1);
-    
-    setShowDecryptModal({
-      roundId: round.roundId,
-      redCount: estimatedRedCount,
-      blueCount: estimatedBlueCount
-    });
-  };
-
-  const handleDecryptConfirm = async () => {
-    if (!showDecryptModal || !onDecryptRound) return;
-    
+    // Local hardhat / other networks: 自动估算并直接提交解密结果（静默执行，不弹出提示框）
     try {
-      setDecrypting(showDecryptModal.roundId);
-          await onDecryptRound(
-            showDecryptModal.roundId,
-            showDecryptModal.redCount,
-            showDecryptModal.blueCount
-          );
-      alert('Round decrypted successfully!');
-      setShowDecryptModal(null);
-      // 解密完成后，依赖 currentRoundId 或父组件触发刷新
+      setDecrypting(round.roundId);
+
+      const estimatedRedCount = Math.ceil(Number(formatEther(round.totalRedAmount)) / 0.1);
+      const estimatedBlueCount = Math.ceil(Number(formatEther(round.totalBlueAmount)) / 0.1);
+
+      await onDecryptRound(
+        round.roundId,
+        estimatedRedCount,
+        estimatedBlueCount
+      );
     } catch (error) {
       console.error('Decrypt error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -333,13 +320,13 @@ export function PastRounds({ currentRoundId, userAddress, onClaimReward, onDecry
                     <div className="bg-red-50 rounded p-3">
                       <div className="font-semibold text-red-800 mb-1">🔴 Red Team</div>
                       <div className="text-red-600">{redAmount.toFixed(4)} ETH</div>
-                      <div className="text-xs text-red-500 mt-1">~ {Math.ceil(Number(formatEther(round.totalRedAmount)) / 0.1)} voters</div>
+                    <div className="text-xs text-red-500 mt-1">~ {Math.ceil(Number(formatEther(round.totalRedAmount)) / 0.1)} voters</div>
                     </div>
                     
                     <div className="bg-blue-50 rounded p-3">
                       <div className="font-semibold text-blue-800 mb-1">🔵 Blue Team</div>
                       <div className="text-blue-600">{blueAmount.toFixed(4)} ETH</div>
-                      <div className="text-xs text-blue-500 mt-1">~ {Math.ceil(Number(formatEther(round.totalBlueAmount)) / 0.1)} voters</div>
+                    <div className="text-xs text-blue-500 mt-1">~ {Math.ceil(Number(formatEther(round.totalBlueAmount)) / 0.1)} voters</div>
                     </div>
                   </div>
                   
@@ -358,96 +345,6 @@ export function PastRounds({ currentRoundId, userAddress, onClaimReward, onDecry
           );
         })}
       </div>
-
-      {/* 解密确认模态框 */}
-      {showDecryptModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              🔓 Decrypt Round #{showDecryptModal.roundId}
-            </h3>
-            
-            <div className="space-y-4 mb-6">
-              <p className="text-gray-700">
-                This will decrypt the voting results for Round #{showDecryptModal.roundId}.
-              </p>
-              
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                <h4 className="font-semibold text-gray-900 mb-2">Estimated Results:</h4>
-                <div className="flex justify-between items-center">
-                  <span className="text-red-700">🔴 Red Votes:</span>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      value={showDecryptModal.redCount}
-                      onChange={(e) => setShowDecryptModal({
-                        ...showDecryptModal,
-                        redCount: parseInt(e.target.value) || 0
-                      })}
-                      className="w-20 px-2 py-1 border rounded text-center"
-                    />
-                    <span className="text-sm text-gray-500">voters</span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-blue-700">🔵 Blue Votes:</span>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      value={showDecryptModal.blueCount}
-                      onChange={(e) => setShowDecryptModal({
-                        ...showDecryptModal,
-                        blueCount: parseInt(e.target.value) || 0
-                      })}
-                      className="w-20 px-2 py-1 border rounded text-center"
-                    />
-                    <span className="text-sm text-gray-500">voters</span>
-                  </div>
-                </div>
-                
-                {showDecryptModal.redCount < showDecryptModal.blueCount && (
-                  <div className="mt-3 text-sm font-semibold text-red-700 text-center">
-                    👑 Red wins (minority)
-                  </div>
-                )}
-                {showDecryptModal.blueCount < showDecryptModal.redCount && (
-                  <div className="mt-3 text-sm font-semibold text-blue-700 text-center">
-                    👑 Blue wins (minority)
-                  </div>
-                )}
-                {showDecryptModal.redCount === showDecryptModal.blueCount && showDecryptModal.redCount > 0 && (
-                  <div className="mt-3 text-sm font-semibold text-gray-700 text-center">
-                    🤝 Tie - No winner
-                  </div>
-                )}
-              </div>
-              
-              <p className="text-sm text-gray-600">
-                💡 <strong>Note:</strong> In a real FHE system, decryption would be done automatically by an oracle. 
-                For testing, you can manually set the vote counts.
-              </p>
-            </div>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDecryptModal(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDecryptConfirm}
-                disabled={decrypting !== null}
-                className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-gray-400 font-bold"
-              >
-                {decrypting !== null ? 'Processing...' : 'Confirm Decrypt'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

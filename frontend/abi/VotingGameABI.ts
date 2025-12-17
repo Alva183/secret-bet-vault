@@ -348,6 +348,30 @@ export const VotingGameABI = [
         "type": "uint256"
       }
     ],
+    "name": "getEncryptedCounts",
+    "outputs": [
+      {
+        "internalType": "euint32",
+        "name": "encryptedRedCount",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "euint32",
+        "name": "encryptedBlueCount",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "roundId",
+        "type": "uint256"
+      }
+    ],
     "name": "getRoundResults",
     "outputs": [
       {
@@ -409,7 +433,7 @@ export const VotingGameABI = [
     "outputs": [
       {
         "internalType": "bool",
-        "name": "hasVoted",
+        "name": "userHasVoted",
         "type": "bool"
       },
       {
