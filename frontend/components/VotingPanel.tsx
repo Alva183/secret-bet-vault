@@ -81,7 +81,20 @@ export function VotingPanel({ round, userAddress, onVote, onEndRound, timeRemain
       alert('Round ended successfully!');
     } catch (error) {
       console.error('End round error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Round not ended yet') || error.message.includes('not ended')) {
+          errorMessage = 'The round has not ended yet on the blockchain. Please wait a few more seconds and try again.';
+        } else if (error.message.includes('seconds remaining')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('User rejected')) {
+          errorMessage = 'Transaction was cancelled by user';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       alert(`Error ending round: ${errorMessage}`);
     } finally {
       setEnding(false);

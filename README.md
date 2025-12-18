@@ -15,6 +15,8 @@ A decentralized voting game where users vote **Red** 🔴 or **Blue** 🔵 with 
 
 - 🔐 **Fully Encrypted Voting**: Votes are encrypted using FHE technology, ensuring complete privacy during the voting round
 - ⏱️ **5-Minute Rounds**: Fast-paced rounds with automatic progression
+- ⏰ **Real-Time Countdown**: Live countdown timer synchronized with blockchain time, updates every second
+- 🔄 **On-Chain Time Sync**: Automatic synchronization with blockchain every 10 seconds to ensure accuracy
 - 🏆 **Minority Wins**: The side with fewer voters wins - encourages strategic thinking!
 - 💰 **Proportional Rewards**: Winners split the entire pool based on their contribution
 - 🎁 **Minimum Bet**: 0.1 ETH minimum to participate
@@ -34,7 +36,10 @@ A decentralized voting game where users vote **Red** 🔴 or **Blue** 🔵 with 
    Your vote is **encrypted immediately** - nobody can see your choice!
 
 3. **Wait for Round End** ⏳  
-   The round lasts 5 minutes. All votes remain encrypted and private.
+   The round lasts 5 minutes. All votes remain encrypted and private.  
+   - Watch the real-time countdown timer that updates every second
+   - The timer automatically syncs with blockchain time every 10 seconds for accuracy
+   - Round data refreshes every 30 seconds to show latest pool amounts and participants
 
 4. **Decrypt Results** 🔓  
    After the round ends, anyone can trigger decryption:
@@ -217,6 +222,18 @@ function claimReward(uint256 roundId) external {
 | **During Round** | ❌ Vote counts hidden | ✅ Complete privacy |
 | **After Round** | ⏳ Awaiting decryption | ✅ Still encrypted |
 | **Post-Decryption** | ✅ Full transparency | ❌ Results public |
+
+### Time Synchronization
+
+The frontend implements a sophisticated time synchronization system:
+
+- **Initial Load**: Fetches actual remaining time from blockchain using `getTimeRemaining()`
+- **Real-Time Updates**: Countdown updates every second based on synchronized time
+- **Periodic Sync**: Automatically syncs with blockchain every 10 seconds to correct for client time drift
+- **Smart Validation**: Before ending a round, validates on-chain time to prevent premature calls
+- **Error Messages**: Shows actual blockchain remaining time when operations fail due to timing
+
+This ensures the countdown timer is always accurate and synchronized with the blockchain, preventing issues with client-side time differences.
 
 ## 🚀 Quick Start
 
@@ -442,6 +459,40 @@ struct Vote {
 **`getTimeRemaining()`**
 - Returns: Seconds remaining in current round
 
+## ⚙️ Technical Implementation
+
+### Time Synchronization System
+
+The frontend implements a robust time synchronization mechanism to ensure accurate countdown timers:
+
+1. **Initial Time Fetch**: When loading round data, the system calls `getTimeRemaining()` on the smart contract to get the actual blockchain time remaining.
+
+2. **Real-Time Countdown**: 
+   - Uses a `setInterval` to update the countdown every second
+   - Calculates remaining time based on the last synchronized value
+   - Updates the UI in real-time for smooth user experience
+
+3. **Periodic Blockchain Sync**:
+   - Every 10 seconds, the system calls `getTimeRemaining()` again
+   - Corrects any drift between client time and blockchain time
+   - Ensures the countdown is always accurate
+
+4. **Smart Round Ending**:
+   - Before calling `endRound()`, validates on-chain time remaining
+   - Shows helpful error messages with actual remaining seconds if time hasn't elapsed
+   - Prevents unnecessary transaction failures
+
+5. **Automatic Refresh**:
+   - When countdown reaches zero, automatically refreshes data
+   - Ensures UI reflects the latest blockchain state
+   - Allows users to immediately decrypt results or end the round
+
+This architecture ensures that:
+- ✅ Countdown is always synchronized with blockchain time
+- ✅ No unnecessary RPC calls (only every 10 seconds)
+- ✅ Smooth user experience with 1-second updates
+- ✅ Accurate error messages when operations fail
+
 ## 🎨 Frontend Features
 
 ### Main Components
@@ -449,18 +500,19 @@ struct Vote {
 #### 1. **VotingGameApp** (`components/VotingGameApp.tsx`)
 - Main application container
 - Manages wallet connection state
-- Handles auto-refresh every 30 seconds
+- Handles auto-refresh every 30 seconds to sync with blockchain
 - Displays network information
 
 #### 2. **VotingPanel** (`components/VotingPanel.tsx`)
 - Red vs Blue voting interface
 - Amount input with validation
 - Real-time transaction feedback
-- End round functionality
+- End round functionality with on-chain time validation
+- Smart error handling with helpful messages
 
 #### 3. **RoundStats** (`components/RoundStats.tsx`)
 - Current round information
-- Time remaining countdown
+- Real-time countdown timer (updates every second)
 - Total pool and team amounts
 - Participant count
 
@@ -474,19 +526,27 @@ struct Vote {
 
 #### `useVotingGame` (`hooks/useVotingGame.tsx`)
 
+A comprehensive hook that manages all game state and interactions:
+
 ```typescript
 const {
-  currentRound,      // Current round data
-  timeRemaining,     // Seconds until round ends
+  currentRound,      // Current round data from blockchain
+  timeRemaining,     // Seconds until round ends (synced with blockchain)
   loading,           // Loading state
   error,             // Error messages
   vote,              // Function to cast vote
-  endRound,          // Function to end round
+  endRound,          // Function to end round (with on-chain validation)
   claimReward,       // Function to claim reward
   decryptRound,      // Function to decrypt results
   refresh            // Manual refresh function
 } = useVotingGame(refreshTrigger);
 ```
+
+**Key Features:**
+- **Real-time countdown**: Updates every second, synchronized with blockchain time
+- **On-chain time sync**: Automatically syncs with blockchain every 10 seconds to correct for client time drift
+- **Smart error handling**: Provides helpful error messages with actual remaining time when operations fail
+- **Automatic refresh**: Refreshes data after transactions and when countdown reaches zero
 
 ## 📁 Project Structure
 
@@ -684,10 +744,23 @@ npx hardhat voting-game:claim --round 5 --network localhost
 - Check you're meeting minimum bet (0.1 ETH)
 - Verify round is still active
 
+#### "Round has not ended yet on the blockchain"
+**Solution**:
+- The countdown timer shows client-side time, but blockchain time may differ slightly
+- Wait for the actual remaining time shown in the error message
+- The system automatically syncs with blockchain every 10 seconds
+- Try again after the countdown reaches zero and wait a few more seconds
+
 #### "Frontend shows wrong network"
 **Solution**:
 - Switch MetaMask to correct network
 - Refresh page after switching
+
+#### "Countdown not updating"
+**Solution**:
+- The countdown syncs with blockchain every 10 seconds automatically
+- If it seems stuck, wait up to 10 seconds for the next sync
+- Refresh the page if the issue persists
 
 ## 📚 Documentation
 
