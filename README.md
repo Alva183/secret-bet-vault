@@ -9,7 +9,7 @@ A decentralized voting game where users vote **Red** 🔴 or **Blue** 🔵 with 
 
 ## 🎥 Demo Video
 
-**[Watch Demo Video](./voting-game.mp4)** - See the game in action! (9.37 MB)
+**[Watch Demo Video](https://youtu.be/5Nsnxrl5XZo)** - See the game in action!
 
 ## ✨ Key Features
 
